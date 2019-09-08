@@ -16,8 +16,8 @@ fn main() {
     info!("Was solved? {} - steps: {}", was_solved, solver.counter);
     info!("Time elapsed solving sokoban is: {:?}", start.elapsed());
     if was_solved {
-        println!("{}::{:?}", sokoban_level, start.elapsed());
+        println!("{},{:?}", sokoban_level, start.elapsed().as_secs_f64());
     } else {
-        println!("{}::notsolved", sokoban_level);
+        println!("{},notsolved", sokoban_level);
     }
 }

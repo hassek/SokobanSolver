@@ -230,15 +230,17 @@ impl Solver {
         // box and goal length are the same, so we can use the match_length for both
         let match_length = self.sokoban.boxes.len();
         let mut minimum_cost;
-        let mut current_goal_index;
-        for i in 0..match_length {
-            current_goal_index = (goal_index + i) % match_length;
-            // second loop over boxes
-            let mut current_box_index;
-            for j in 0..match_length {
-                current_box_index = (box_index + j) % match_length;
+        let mut current_box_index;
+        for j in 0..match_length {
+            current_box_index = (box_index + j) % match_length;
+            let mut current_goal_index;
+
+            for i in 0..match_length {
+                // second loop over goals
+                current_goal_index = (goal_index + i) % match_length;
 
                 let mut current_direction = previous_direction.clone();
+                let mut is_blocked = true;
                 for _dir in 0..4 {
                     // Avoid trying to go to a goal where a box is set
                     // check if minimum cost is greater than cost limit
@@ -254,6 +256,7 @@ impl Solver {
 
                     // try to move box, if we can, count, and issue DFS again
                     if self.sokoban.move_box(current_box_index, &current_direction) {
+                        is_blocked = false;
                         self.counter += 1;
                         // debug!("depth: {}, state: {}\n {}", depth, self.sokoban.get_hash(), self.sokoban.print_level());
                         let solved = self.solve_dfs(
@@ -278,16 +281,61 @@ impl Solver {
 
                     current_direction = current_direction.next().unwrap();
                 }
+
+                if is_blocked {
+                    // check if the box is in a whole
+                    // check if it wasn't able to move because of walls, compared to boxes that
+                    // could be moved in the future.
+                    //
+                    // If can't move because of boxes, break the current loop
+                    // If can't move because of walls, cut the options tree entirely by returning false
+                    if self.should_cut_tree(box_index) {
+                        return false;
+                    }
+
+                    break;
+                }
             }
         }
 
-        return false;
+        false
     }
 
-    // fn solve_sokoban() {
-    //     // IDA (iterative deepening A*) algorithm
+    /*
+     * in case of a blockage, i.e. a box can't be moved
+     * check the reason why.
+     *
+     * - If box can't move because there is another box blocking the way, we should keep looking that tree
+     * - If box can't move but it's on a goal, keep looking that tree
+     * - If box can't move because there are walls, stop looking that tree.
+     */
+    fn should_cut_tree(&self, box_index: usize) -> bool {
+        let box_position = self.sokoban.boxes[box_index];
+        let box_ntype = self.sokoban.get_ntype(&box_position);
 
-    // }
+        if box_ntype == NodeType::BoxOnWhole {
+            return false;
+        }
+        
+        let directions = [Direction::Up, Direction::Down, Direction::Left, Direction::Right];
+        for dir in directions.iter() {
+            let future_result = self.sokoban.get_future_position(&box_position, &dir);
+            if future_result.err().is_some() {
+                continue;
+            }
+
+            let (box_future, player_future) = future_result.ok().unwrap();
+            let box_future = self.sokoban.get_ntype(&box_future);
+            let player_future = self.sokoban.get_ntype(&player_future);
+            if player_future == NodeType::Wall || box_future == NodeType::Wall {
+                continue
+            }
+
+            return false;
+        }
+
+        true
+    }
 }
 
 #[cfg(test)]

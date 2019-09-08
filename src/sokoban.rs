@@ -191,44 +191,50 @@ impl Sokoban {
         boxes == goals
     }
 
-    pub fn move_box(&mut self, box_index: usize, direction: &Direction) -> bool {
-        // debug!("Trying {:?} on box {}", direction, box_index);
-
-        // if !&box_node.ntype.is_box() {
-        //     return false;
-        // }
-
-        let box_position = self.boxes[box_index];
-        let mut box_position = box_position.clone();
-        let mut player_position = box_position.clone();
+    pub fn get_future_position(&self, box_position: &Position, direction: &Direction) -> Result<(Position, Position), &'static str> {
+        let mut new_box_pos = box_position.clone();
+        let mut new_player_pos = box_position.clone();
 
         match direction {
             Direction::Up => {
-                if player_position.y < 2 {
-                    return false;
+                if new_player_pos.y < 2 {
+                    return Err("Out of Bounds");
                 }
-                box_position.y -= 1;
-                player_position.y -= 2;
+                new_box_pos.y -= 1;
+                new_player_pos.y -= 2;
             }
             Direction::Down => {
-                box_position.y += 1;
-                player_position.y += 2;
+                new_box_pos.y += 1;
+                new_player_pos.y += 2;
             }
             Direction::Left => {
-                if player_position.x < 2 {
-                    return false;
+                if new_player_pos.x < 2 {
+                    return Err("Out of Bounds");
                 }
-                box_position.x -= 1;
-                player_position.x -= 2;
+                new_box_pos.x -= 1;
+                new_player_pos.x -= 2;
             }
             Direction::Right => {
-                box_position.x += 1;
-                player_position.x += 2;
+                new_box_pos.x += 1;
+                new_player_pos.x += 2;
             }
         };
+        Ok((new_box_pos, new_player_pos))
+    }
 
+    pub fn move_box(&mut self, box_index: usize, direction: &Direction) -> bool {
+        // debug!("Trying {:?} on box {}", direction, box_index);
+
+        let box_position = self.boxes[box_index];
+        let future_result = self.get_future_position(&box_position, direction);
+        if future_result.err().is_some() {
+            return false
+        }
+
+        let (box_position, player_position) = future_result.ok().unwrap();
         let box_future = self.get_ntype(&box_position);
         let player_future = self.get_ntype(&player_position);
+
         if box_future.can_move() && player_future.can_move() && self.can_reach(&box_position) {
             self.boxes[box_index] = box_position;
             self.player = Some(player_position);
