@@ -99,10 +99,6 @@ pub struct Node {
 }
 
 impl Node {
-    pub fn new(ntype: NodeType, position: Position) -> Node {
-        Node { ntype, position }
-    }
-
     pub fn loop_positions(pos: &Position) -> Vec<Position> {
         let mut arr = Vec::new();
         if pos.x > 0 {
@@ -173,9 +169,9 @@ mod tests {
 
     #[test]
     fn test_ordering() {
-        let node1 = Node::new(NodeType::Empty, Position::new(0, 0));
-        let node2 = Node::new(NodeType::Wall, Position::new(0, 1));
-        let node3 = Node::new(NodeType::Empty, Position::new(0, 2));
+        let node1 = Node {ntype: NodeType::Empty, position: Position::new(0, 0) };
+        let node2 = Node {ntype: NodeType::Wall, position: Position::new(0, 1) };
+        let node3 = Node {ntype: NodeType::Empty, position: Position::new(0, 2) };
 
         assert_eq!(node1 != node2, true);
         assert_eq!(node1 < node2, true);
