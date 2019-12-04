@@ -1,4 +1,4 @@
-#![allow(dead_code, unused_variables)]
+#![allow(dead_code)]
 use crate::node::{Node, NodeType, Position};
 use crate::sokoban::{Direction, Sokoban};
 use log::debug;
