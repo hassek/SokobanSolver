@@ -197,7 +197,7 @@ impl Solver {
         };
 
         while let GeneratorState::Yielded((goal_index, box_index, direction)) =
-            Pin::new(&mut depth_permutation).resume()
+            Pin::new(&mut depth_permutation).resume(())
         {
             println!(
                 "goal {}, box {}, direction {:?}",

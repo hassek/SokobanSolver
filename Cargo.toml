@@ -14,6 +14,5 @@ name = "sokoban-solver"
 path = "src/main.rs"
 
 [dependencies]
-debug-here = "0.2.2"
-log = "0.4.7"
-pretty_env_logger = "0.3.0"
+log = "0.4.11"
+pretty_env_logger = "0.4.0"
